@@ -1,58 +1,48 @@
-package edu.bu.met.cs665;
-
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-
 /**
- * JUnit tests for the adapter pattern implementation that bridges legacy and new customer data systems.
+ * Name: Lingpeng Li
+ * Course: CS-665 Software Designs & Patterns
+ * Date: 12/08/2024
+ * File Name: CustomerAdapterTest.java
+ * Description: This class tests the functionality of the CustomerAdapter.
  */
+package edu.bu.met.cs665;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+
 public class CustomerDataAdapterTest {
-
     @Test
-    public void testAdapterRetrievesLegacyData() {
-        LegacyCustomerData legacyData = new LegacyCustomerDataImpl();
-        NewCustomerData adapter = new LegacyCustomerDataAdapter(legacyData);
-
-        // Verify that the adapter retrieves data using the legacy interface
-        assertEquals("Initial Legacy Data", adapter.getCustomerData());
+    public void testFullName() {
+        LegacyCustomer customer = new LegacyCustomer("John", "Doe", "123456789", "john@example.com");
+        CustomerAdapter adapter = new CustomerAdapter(customer);
+        assertEquals("John Doe", adapter.getFullName());
     }
 
     @Test
-    public void testAdapterUpdatesLegacyData() {
-        LegacyCustomerData legacyData = new LegacyCustomerDataImpl();
-        NewCustomerData adapter = new LegacyCustomerDataAdapter(legacyData);
-
-        // Update data through the adapter and verify in the legacy system
-        adapter.updateCustomerData("Updated Legacy Data");
-        assertEquals("Updated Legacy Data", legacyData.retrieveLegacyData());
+    public void testContactDetailsWithEmptyEmail() {
+        LegacyCustomer customer = new LegacyCustomer("Jane", "Smith", "987654321", "");
+        CustomerAdapter adapter = new CustomerAdapter(customer);
+        assertEquals("Phone: 987654321, Email: ", adapter.getContactDetails());
     }
 
     @Test
-    public void testNewSystemRetrievesDataDirectly() {
-        NewCustomerData newData = new NewCustomerDataImpl();
-
-        // Direct retrieval from the new system
-        assertEquals("Initial New Data", newData.getCustomerData());
+    public void testContactDetailsWithEmptyPhone() {
+        LegacyCustomer customer = new LegacyCustomer("Bob", "Brown", "", "bob@example.com");
+        CustomerAdapter adapter = new CustomerAdapter(customer);
+        assertEquals("Phone: , Email: bob@example.com", adapter.getContactDetails());
     }
 
     @Test
-    public void testNewSystemUpdatesDataDirectly() {
-        NewCustomerData newData = new NewCustomerDataImpl();
-
-        // Direct update in the new system
-        newData.updateCustomerData("Updated New Data");
-        assertEquals("Updated New Data", newData.getCustomerData());
+    public void testFullNameWithEmptyLastName() {
+        LegacyCustomer customer = new LegacyCustomer("Emily", "", "123456789", "emily@example.com");
+        CustomerAdapter adapter = new CustomerAdapter(customer);
+        assertEquals("Emily ", adapter.getFullName());
     }
 
     @Test
-    public void testAdapterCompatibility() {
-        LegacyCustomerData legacyData = new LegacyCustomerDataImpl();
-        NewCustomerData adapter = new LegacyCustomerDataAdapter(legacyData);
-
-        // Ensure adapter works independently of the direct new system
-        adapter.updateCustomerData("Adapter Test Compatibility");
-        assertNotEquals("Initial New Data", adapter.getCustomerData());
-        assertEquals("Adapter Test Compatibility", legacyData.retrieveLegacyData());
+    public void testAdapterForNullFields() {
+        LegacyCustomer customer = new LegacyCustomer(null, "Taylor", null, null);
+        CustomerAdapter adapter = new CustomerAdapter(customer);
+        assertEquals("null Taylor", adapter.getFullName());
+        assertEquals("Phone: null, Email: null", adapter.getContactDetails());
     }
 }

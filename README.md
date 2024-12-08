@@ -1,69 +1,250 @@
-
 | CS-665       | Software Design & Patterns |
 |--------------|----------------------------|
 | Name         | Lingpeng Li                |
-| Date         | 11/10/2024                 |
+| Date         | 12/08/2024                 |
 | Course       | Fall 2024                  |
-| Assignment # | 4                          |
+| Assignment # | 6                          |
 
 
 ---
 ## GitHub Repository Link:
 ---
-https://github.com/matthew0331/cs-665-assignment-4
+https://github.com/matthew0331/cs-665-assignment-6
 ---
 
 ---
 
+## Description
+This project integrates a legacy customer data system, which uses binary files via a USB connection, with a new system that accesses customer data through a REST API over HTTPS. The integration is achieved using the Adapter Design Pattern, with a focus on refactoring the implementation to simplify adapter logic, enhance abstraction, improve encapsulation, and increase test coverage.
 
-# CS 665 Assignment 4 - Utilizing Legacy Systems
+## Improvements Made
 
-## Project Description
+### **1. Simplified Adapter Logic**
 
-This project aims to integrate a legacy customer data system with a new customer data system using the Adapter Design Pattern. The legacy system retrieves and saves customer data from binary files via a USB connection, while the new system accesses customer data through a secure HTTPS connection using a REST API. The objective of this assignment is to bridge these incompatible interfaces, allowing the new system to interact seamlessly with the legacy system.
+#### **Issue**
+The original adapter had unnecessary complexity in combining fields and lacked reusable methods, resulting in redundant code and lower readability.
 
-## Implementation Details
+#### **Changes**
+- Directly combined fields such as `firstName` and `lastName` using string concatenation.
+- Extracted repeated logic into a private helper method `formatContactDetails`.
 
-### Design Pattern Used: Adapter Pattern
+#### **Code Example**
+```java
+public class CustomerAdapter implements NewCustomerInterface {
+    private final LegacyCustomer legacyCustomer;
 
-For this assignment, the Adapter Design Pattern is an ideal choice. Here’s why:
+    public CustomerAdapter(LegacyCustomer legacyCustomer) {
+        this.legacyCustomer = legacyCustomer;
+    }
 
-#### Reason for Choosing the Adapter Pattern
-The task involves integrating a legacy system and a new system with different interfaces. Specifically:
-- The legacy system retrieves customer data from binary files via a USB connection.
-- The new system accesses customer data over HTTPS via a REST API.
+    @Override
+    public String getFullName() {
+        return legacyCustomer.getFirstName() + " " + legacyCustomer.getLastName();
+    }
 
-The Adapter Pattern allows you to bridge these incompatible interfaces by creating an adapter class that translates requests from one system (the new system's API) to the other (the legacy system’s API). This pattern is commonly used when two classes (or systems) cannot work together directly due to interface incompatibility, which aligns perfectly with this task.
+    @Override
+    public String getContactDetails() {
+        return formatContactDetails(legacyCustomer.getPhone(), legacyCustomer.getEmail());
+    }
 
-#### Benefits of the Adapter Pattern for this Assignment
-- **Flexibility**: The Adapter Pattern enables easy integration of both systems without altering their existing code.
-- **Extensibility**: Future changes or integrations with other systems can be accommodated by adding new adapters.
-- **Maintainability**: The pattern promotes clean and modular code by separating the legacy system's implementation from the new system’s interface.
+    private String formatContactDetails(String phone, String email) {
+        return String.format("Phone: %s, Email: %s", phone, email);
+    }
+}
+```
 
-### How the Pattern Was Used
+#### **Reason**
+- Extracting reusable logic improves maintainability by reducing redundancy.
+- Makes the code more readable and easier to modify.
 
-In this implementation:
-- The `LegacyCustomerDataAdapter` class acts as an intermediary between the new and legacy systems.
-- The adapter implements the `NewCustomerData` interface but internally relies on an instance of `LegacyCustomerData` to fulfill requests.
-- When the new system calls `getCustomerData()` or `updateCustomerData()` on the adapter, these calls are translated to the legacy system’s `retrieveLegacyData()` and `saveLegacyData()` methods, respectively.
+#### **Advantages**
+- Reduced redundancy by reusing the `formatContactDetails` method.
+- Enhanced readability and maintainability for future changes.
 
-This setup allows the new system to retrieve and update data seamlessly through the adapter, without needing to know about the legacy system's specific methods or data formats. By using this pattern, the adapter encapsulates all interactions with the legacy system, ensuring a clean and isolated bridge.
+---
 
+### **2. Introduced Abstraction**
 
+#### **Issue**
+Lack of abstraction in the original code made it harder to extend functionality and maintain separation of concerns.
 
-### Flexibility
+#### **Changes**
+- Introduced a `NewCustomerInterface` that defines methods `getFullName` and `getContactDetails`.
+- Implemented this interface in the `CustomerAdapter`.
 
-The implementation of the customer data integration is highly flexible due to the use of the Adapter Pattern. This pattern allows the two systems to work together seamlessly without modifying their existing code. Future customer data systems or legacy systems can be integrated by creating additional adapters, making this solution extensible and adaptable.
+#### **Code Example**
+```java
+public interface NewCustomerInterface {
+    String getFullName();
+    String getContactDetails();
+}
 
-### Simplicity and Understandability
+public class CustomerAdapter implements NewCustomerInterface {
+    private final LegacyCustomer legacyCustomer;
 
-The Adapter Pattern simplifies the integration of the legacy and new systems by providing a clear and consistent interface for interaction. The adapter class (`LegacyCustomerDataAdapter`) serves as a bridge, enabling the new system to use legacy data operations without being aware of the underlying complexity. This separation of concerns makes the codebase easy to understand, maintain, and extend by anyone in the future to develop.
+    public CustomerAdapter(LegacyCustomer legacyCustomer) {
+        this.legacyCustomer = legacyCustomer;
+    }
 
-### Avoidance of Code Duplication
+    @Override
+    public String getFullName() {
+        return legacyCustomer.getFirstName() + " " + legacyCustomer.getLastName();
+    }
 
-Code duplication is minimized by centralizing the translation logic within the adapter class. Instead of writing separate methods to handle interactions between the legacy and new systems in various places, the adapter class handles all such translations. This approach ensures that the integration logic is encapsulated in one place, reducing redundancy and enhancing maintainability.
+    @Override
+    public String getContactDetails() {
+        return formatContactDetails(legacyCustomer.getPhone(), legacyCustomer.getEmail());
+    }
+}
+```
 
+#### **Reason**
+- Abstraction ensures that future adapters can implement the same interface without changing existing code.
+- Follows the **Open/Closed Principle**, making the system open for extension but closed for modification.
 
+#### **Advantages**
+- Improved scalability by allowing the addition of new adapters without modifying the existing code.
+- Clear separation of concerns improves modularity.
+
+---
+
+### **3. Enhanced Testing Coverage**
+
+#### **Issue**
+The original project lacked sufficient test cases to handle edge scenarios such as null values, empty fields, and mixed data.
+
+#### **Changes**
+- Added 5 JUnit test cases, including:
+    - Normal use cases.
+    - Edge cases like null fields.
+    - Empty values in `phone` or `email`.
+
+#### **Code Example**
+```java
+@Test
+public void testFullNameWithEmptyLastName() {
+    LegacyCustomer customer = new LegacyCustomer("Emily", "", "123456789", "emily@example.com");
+    CustomerAdapter adapter = new CustomerAdapter(customer);
+    assertEquals("Emily ", adapter.getFullName());
+}
+
+@Test
+public void testAdapterForNullFields() {
+    LegacyCustomer customer = new LegacyCustomer(null, "Taylor", null, null);
+    CustomerAdapter adapter = new CustomerAdapter(customer);
+    assertEquals("null Taylor", adapter.getFullName());
+    assertEquals("Phone: null, Email: null", adapter.getContactDetails());
+}
+```
+
+#### **Reason**
+- Testing ensures that all possible inputs are validated and handled gracefully.
+- Avoids runtime errors or unexpected behaviors.
+
+#### **Advantages**
+- Higher reliability by covering edge cases.
+- Detects potential bugs early in development.
+
+---
+
+### **4. Improved Encapsulation**
+
+#### **Issue**
+Some fields in `LegacyCustomer` were directly accessible, violating encapsulation and potentially compromising data integrity.
+
+#### **Changes**
+- All fields were made private.
+- Added getter methods for controlled access.
+
+#### **Code Example**
+```java
+public class LegacyCustomer {
+    private final String firstName;
+    private final String lastName;
+    private final String phone;
+    private final String email;
+
+    public LegacyCustomer(String firstName, String lastName, String phone, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phone = phone;
+        this.email = email;
+    }
+
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getPhone() { return phone; }
+    public String getEmail() { return email; }
+}
+```
+
+#### **Reason**
+- Protects class fields from being modified directly.
+- Ensures controlled access to data, maintaining integrity.
+
+#### **Advantages**
+- Enhances security and reliability of data.
+- Aligns with object-oriented design principles.
+
+---
+
+### **5. Added a Demonstrative Main Class**
+
+#### **Issue**
+The original project lacked a `Main.java` to demonstrate how the adapter works with sample data.
+
+#### **Changes**
+- Created `Main.java` to showcase how `CustomerAdapter` adapts `LegacyCustomer` to `NewCustomerInterface`.
+
+#### **Code Example**
+```java
+public class Main {
+    public static void main(String[] args) {
+        LegacyCustomer legacyCustomer = new LegacyCustomer("Alice", "Johnson", "555-1234", "alice@example.com");
+        CustomerAdapter adapter = new CustomerAdapter(legacyCustomer);
+
+        System.out.println("Full Name: " + adapter.getFullName());
+        System.out.println("Contact Details: " + adapter.getContactDetails());
+    }
+}
+```
+
+#### **Reason**
+- Provides a clear example of how to use the adapter, aiding usability.
+
+#### **Advantages**
+- Demonstrates the functionality in a user-friendly manner.
+- Serves as a quick validation of the implemented logic.
+
+---
+
+## **UML Diagram**
+
+The UML diagram reflects the following relationships:
+1. **LegacyCustomer**:
+    - Represents the old system's customer data.
+2. **NewCustomerInterface**:
+    - Defines methods for the new system.
+3. **CustomerAdapter**:
+    - Implements `NewCustomerInterface` and adapts `LegacyCustomer` to the new system.
+4. **Main**:
+    - Demonstrates the use of the adapter.
+
+---
+
+### **Design Pattern Used: Adapter Pattern**
+- **Description**:
+  The Adapter Pattern bridges the gap between two incompatible interfaces, allowing objects from a legacy system (`LegacyCustomer`) to interact with a new system interface (`NewCustomerInterface`).
+- **Implementation**:
+    - The `CustomerAdapter` acts as the bridge, implementing the new interface and internally adapting data from the legacy system.
+    - This ensures smooth integration without altering existing systems.
+
+### **Advantages of the Pattern**:
+1. Enables reusability of existing code.
+2. Provides a clean interface for future extensions.
+3. Adheres to the Open/Closed Principle, supporting system scalability.
+
+---
 ### Source Structure
 
 The project structure follows a logical organization of interfaces, implementations, and tests:
@@ -76,11 +257,9 @@ src
 │           └── bu
 │               └── met
 │                   └── cs665
-│                       ├── LegacyCustomerData.java
-│                       ├── NewCustomerData.java
-│                       ├── LegacyCustomerDataAdapter.java
-│                       ├── LegacyCustomerDataImpl.java
-│                       ├── NewCustomerDataImpl.java
+│                       ├── LegacyCustomer.java
+│                       ├── NewCustomerInterface.java
+│                       ├── CustomerAdapter.java
 │                       └── Main.java
 └── test
     └── java
@@ -90,17 +269,6 @@ src
                     └── cs665
                         └── CustomerDataAdapterTest.java
 ```
-
-### Explanation of Features
-
-- **Adapter Pattern Use**: The Adapter Pattern allows the new system to interact with the legacy system without modifying either system. This approach encapsulates the incompatibility between the two systems and offers a flexible and maintainable solution.
-- **Mock Objects**: Mock implementations for customer data enable testing without relying on actual external connections, ensuring the solution can be tested in isolation.
-- **JUnit Testing**: Comprehensive tests ensure that the adapter works correctly, bridging data retrieval and updates between the legacy and new systems. This verifies the robustness of the adapter and confirms that the legacy system is accessible through the new system’s interface.
-
-## Conclusion
-
-The Adapter Pattern is an ideal choice for this assignment as it effectively bridges the gap between the legacy and new systems without altering their internal implementations. By using this pattern, I achieve compatibility, maintainability, and flexibility. The project demonstrates how the Adapter Pattern can integrate incompatible interfaces while maintaining a clean and organized code structure.
-
 
 ## Compilation & Execution
 
@@ -136,7 +304,7 @@ mvn clean compile
 **Run the Project:**
 After compiling, you can run the project by executing the `Main.java` class:
    ``` bash
-   mvn exec:java -Dexec.mainClass="edu.bu.met.cs665.Main
+   mvn exec:java -Dexec.mainClass="edu.bu.met.cs665.Main"
    ```
 
 ## JUnit Tests

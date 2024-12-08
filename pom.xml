@@ -8,7 +8,7 @@
     <!-- This is the Maven groupId of the project, which identifies the project uniquely across all projects. -->
     <groupId>edu.bu.cs665</groupId>
     <!-- This specifies the name of the project's artifact (e.g., the compiled output file or library) that will be created when the project is built. -->
-    <artifactId>CS665HW4</artifactId>
+    <artifactId>CS665HW6</artifactId>
     <!-- The version of the project -->
     <version>1.0-SNAPSHOT</version>
     <!-- This line specifies the packaging type of the project, which in this case is "jar" (Java Archive), meaning that the project will be packaged as a JAR file. -->
